@@ -62,10 +62,22 @@ int main(int argc, char *argv[])
          error("ERROR writing to socket");
     bzero(buffer,64);
     // Leemos la respuesta del servidor
-    n = read(sockfd,buffer,63);
+    n = read(sockfd, buffer, 63);
     if (n < 0) 
          error("ERROR reading from socket");
-    printf("%s\n",buffer); // Imprimimos la respuesta del servidor
+    int resp = atoi(buffer);
+    if (resp == 0){
+        printf("La reserva ha sido realizada con éxito.\n");
+    } else if (resp == 1){
+        printf("El puesto deseado ya se encuentra ocupado. Intente de nuevo.\n");
+        // Falta lo de imprimir los puestos disponibles.
+    } else if (resp == 2){
+        printf("Lo sentimos. No quedan asientos libres en el vagón.\n");
+    } else if (resp == 3){
+        printf("El puesto %d:%d no existe. Intente con uno válido.\n", rowno, colno);
+    } else {
+        error("ERROR communication with server failed");
+    }
     close(sockfd);
     return 0;
 }
