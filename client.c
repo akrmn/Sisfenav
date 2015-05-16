@@ -56,7 +56,7 @@ void argread(
       default:
         fprintf(
           stderr,
-          "Unknown flag -%c",
+          "Flag desconocido -%c\n",
           c
         );
         exit(1);
@@ -65,10 +65,10 @@ void argread(
   if (!hflag || !rflag || !cflag){
     fprintf(
       stderr,
-      "Usage: %s -h <hostname> -p <port> -r <row> -c <column>\n"
-      "\tthe hostname, row and column arguments are mandatory, while "
-      "the port is optional.\n\tIf the port is left out, the default "
-      "value of %d will be used.\n",
+      "Uso: %s -h <hostname> -p <puerto> -r <fila> -c <columna>\n"
+      "\tlos argumentos de hostname, fila y columna son obligatorios, mientras que "
+      "el puerto es opcional.\n\tSi el puerto no es especificado, se usará el "
+      "puerto %d por defecto.\n",
       argv[0],
       DEFPORT
       );
@@ -76,7 +76,7 @@ void argread(
   }
 
   if (!pflag){
-    printf("Using default port, %d\n", DEFPORT);
+    printf("Usando el puerto por defecto, %d\n", DEFPORT);
     * portno = DEFPORT;
   }
 }
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   char * hostname;
   struct sockaddr_in serv_addr;
   struct hostent *server;
-  char buffer[64]; // Buffer para la comunicacion
+  char buffer[164]; // Buffer para la comunicacion
 
     /* la siguiente funcion llena los valores de rowno, colno, hostname
     y portno a partir de los valores indicados por el usuario */
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
   )
     error("ERROR connecting");
 
-  bzero(buffer,64);
+  bzero(buffer,164);
 
     // Escribimos el puesto deseado en el buffer
   sprintf(buffer,"%d:%d;",rowno,colno);
@@ -142,39 +142,46 @@ int main(int argc, char *argv[])
   if (n < 0)
     error("ERROR writing to socket");
 
-  bzero(buffer,64);
+  bzero(buffer,164);
 
     // Leemos la respuesta del servidor
-  n = read(sockfd, buffer, 63);
+  n = read(sockfd, buffer, 163);
   if (n < 0)
     error("ERROR reading from socket");
-  int resp = atoi(buffer);
 
-  switch (resp){
-    case 0:
+  if (buffer[0] == '0'){
       printf(
-        "Your reservation has been successfully completed.\n"
+        "La reserva ha sido realizada satisfactoriamente.\n"
       );
-      break;
-    case 1:
+  } else if (buffer[0] == '1') {
       printf(
-        "The requested seat is unavailable. Please try again.\n"
+        "El puesto solicitado se encuentra ocupado.\n"
+        "Intente de nuevo con un puesto de la actual lista de puestos disponibles:\n\n"
       );
-      // MOSTRAR PUESTOS DISPONIBLES
-      break;
-    case 2:
+      int i, fa, ca, cols; // iterador, fila actual, columna actual, columnas del vagon
+      fa = 1;
+      ca = 1;
+      cols = buffer[strlen(buffer)-2] - '0'; // Columnas del vagon a enteros
+      for (i = 1; i < strlen(buffer); i++) {
+        if (buffer[i] == '0') printf("%d:%d;\t",fa,ca);
+        if (ca == cols) { // Condicion que evalua cambio de fila
+            printf("\n");
+            fa++;
+            ca = 0;
+        }
+        ca++;
+      }
+  } else if (buffer[0] == '2') {
       printf(
-        "Our sincere apologies, there are no free places in this wagon.\n"
+        "Ofrecemos nuestras disculpas, ya no quedan asientos libres.\n"
       );
-      break;
-    case 3:
+  } else if (buffer[0] == '3') {
       printf(
-        "The seat %d:%d does not exist. Please try again with a valid seat.\n",
+        "El asiento %d:%d no existe. Por favor, intente de nuevo.\n",
         rowno,
         colno
       );
-      break;
-    default:
+  } else {
       error("ERROR communication with server failed");
       exit(1);
   }

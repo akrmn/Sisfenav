@@ -12,9 +12,9 @@
 #define OCCUPIED 1
 #define AVAILABLE 0
 
-#define MAXROWS 100
+#define MAXROWS 20
 #define DEFROWS 10
-#define MAXCOLS 100
+#define MAXCOLS 8
 #define DEFCOLS 4
 
 #define DEFPORT 8888
@@ -47,11 +47,11 @@ void argread(
       case 'r': // bandera para especificar la cantidad de filas (Rows)
         rflag = 1;
         sscanf (optarg,"%d", rows);
-        if (*rows > MAXROWS || rows <= 0){
+        if (*rows > MAXROWS || *rows <= 0){
           fprintf(
             stderr,
-            "Invalid number of rows, number must be "
-            "larger than zero and smaller than %d\n",
+            "Número inválido de filas. El mismo debe ser "
+            "mayor que 0 y menor que %d\n",
             MAXROWS
           );
           exit(1);
@@ -60,11 +60,11 @@ void argread(
       case 'c': // bandera para especificar la cantidad de columnas (Columns)
         cflag = 1;
         sscanf (optarg,"%d", cols);
-        if (*cols > MAXCOLS || cols <= 0){
+        if (*cols > MAXCOLS || *cols <= 0){
           fprintf(
             stderr,
-            "Invalid number of columns, number must be "
-            "larger than zero and smaller than %d\n",
+            "Número inválido de columnas. El mismo debe ser "
+            "mayor que 0 y menor que %d\n",
             MAXCOLS
           );
           exit(1);
@@ -77,24 +77,24 @@ void argread(
       default:
         fprintf(
           stderr,
-          "Unknown flag -%c",
+          "Flag desconocido -%c\n",
           c
         );
         exit(1);
     }
 
   if (!rflag){
-    printf("Using default number of rows, %d\n", DEFROWS);
+    printf("Usando el número de filas por defecto, %d\n", DEFROWS);
     * rows = DEFROWS;
   }
 
   if (!cflag){
-    printf("Using default number of columns, %d\n", DEFCOLS);
+    printf("Usando el número de columnas por defecto, %d\n", DEFCOLS);
     * cols = DEFCOLS;
   }
 
   if (!pflag){
-    printf("Using default port, %d\n", DEFPORT);
+    printf("Usando el puerto por defecto, %d\n", DEFPORT);
     * portno = DEFPORT;
   }
 }
@@ -131,7 +131,7 @@ int main(int argc, char const *argv[])
   int sockfd, newsockfd, n;
   socklen_t clilen;
   struct sockaddr_in serv_addr, cli_addr;
-  char buffer[64]; // Buffer para la comunicacion
+  char buffer[164]; // Buffer para la comunicacion
 
     // Abrimos un socket
   sockfd  = socket(PF_INET, SOCK_STREAM, 0);
@@ -173,10 +173,10 @@ int main(int argc, char const *argv[])
     if (newsockfd < 0)
       error("ERROR on accept");
 
-    bzero(buffer,64);
+    bzero(buffer,164);
 
       // Se lee el mensaje del cliente al buffer
-    n = read(newsockfd,buffer,63);
+    n = read(newsockfd,buffer,163);
     if (n < 0) error("ERROR reading from socket");
 
       // Se extrae la información deseada del buffer
@@ -190,7 +190,6 @@ int main(int argc, char const *argv[])
 
     rowno--;
     colno--;
-
       /* Se verifica en que categoria cae el puesto solicitado y se
       envia la respuesta apropiada */
     if (
@@ -206,7 +205,21 @@ int main(int argc, char const *argv[])
       freeplaces--;
       n = write(newsockfd,"0",1); // Reserva exitosa
     } else {
-      n = write(newsockfd,"1",1); // Puesto ocupado
+      buffer[0] = '1'; // Puesto ocupado
+      /* Resumimos la lista en el string del buffer tal que:
+         buffer[auxBuff] = 0 si el puesto esta libre
+         buffer[auxBuff] = 1 si el puesto esta ocupado */
+      int auxBuff = 1; // Variable para llenar el buffer
+      int j; // Variable de iteracion sobre las columnas
+      for (i = 0; i < rows; i++) {
+          for (j = 0; j < cols; j++) {
+              buffer[auxBuff] = (places[i][j] == 0) ?  '0' : '1';
+              auxBuff++;
+          }
+      }
+      buffer[auxBuff] = cols + '0'; // Pasa el numero de filas del vagon al cliente.
+      buffer[auxBuff+1] = '\n';
+      n = write(newsockfd, buffer, sizeof(buffer));
     }
   }
 }
