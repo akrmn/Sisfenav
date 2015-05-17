@@ -9,6 +9,7 @@
 #include <netdb.h>
 
 #define DEFPORT 8888
+#define MAXATTEMPTS 3
 
 void error(const char *msg)
 {
@@ -21,7 +22,7 @@ void error(const char *msg)
  */
 void argread(
   int argc,
-  char const *argv[],
+  char *argv[],
   int * rowno,
   int * colno,
   char ** hostname,
@@ -83,7 +84,7 @@ void argread(
 
 int main(int argc, char *argv[])
 {
-  int rowno, colno;
+  int rowno, colno, attempts;
   int sockfd, portno, n;
   char * hostname;
   struct sockaddr_in serv_addr;
@@ -123,14 +124,19 @@ int main(int argc, char *argv[])
   serv_addr.sin_port = htons(portno);
 
     // Se intenta la conexion al servidor
-  if (
-    connect(
-      sockfd,
-      (struct sockaddr *) &serv_addr,
-      sizeof(serv_addr)
-    ) < 0
-  )
-    error("ERROR connecting");
+  attempts = 0;
+  while (attempts < MAXATTEMPTS){
+    if (connect(
+        sockfd,
+        (struct sockaddr *) &serv_addr,
+        sizeof(serv_addr)
+      ) < 0
+    ){
+      attempts = MAXATTEMPTS + 1;
+    }
+    attempts++;
+  }
+  if (attempts == MAXATTEMPTS) error("ERROR connecting");
 
   bzero(buffer,164);
 
