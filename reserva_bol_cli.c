@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         sockfd,
         (struct sockaddr *) &serv_addr,
         sizeof(serv_addr)
-      ) < 0
+      ) != -1
     ){
       attempts = MAXATTEMPTS + 1;
     }
