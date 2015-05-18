@@ -31,7 +31,7 @@ void error(
  */
 void argread(
   int argc,
-  char const *argv[],
+  char *argv[],
   int * rows,
   int * cols,
   int * portno
@@ -112,7 +112,7 @@ int reserve(
   }
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
   int rows, cols;
   int portno;
