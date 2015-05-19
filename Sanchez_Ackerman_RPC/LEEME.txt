@@ -1,0 +1,65 @@
+# Sistema Ferroviario Nacional de Venezuela, versión RPC
+
+## Integrantes
+
+Génessis Sánchez 11-10935
+Moisés Ackerman  11-10005
+
+## Contenido
+.
+├── LEEME.txt             // Este archivo.
+│
+├── Makefile.reserva_bol  // Makefile RPC.
+├── reserva_bol_client.c  // Código del cliente escrito por nosotros.
+├── reserva_bol_clnt.c    // Código talón del cliente generado por rpcgen.
+├── reserva_bol.h         // Cabecera del servidor y el cliente generado
+│                         // por rpcgen.
+├── reserva_bol_server.c  // Código del servidor escrito por nosotros.
+├── reserva_bol_svc.c     // Código talón del servidor generado por rpcgen.
+├── reserva_bol.x         // Archivo .x suministrado a rpcgen, escrito por
+│                         // nosotros.
+└── reserva_bol_xdr.c     // Archivo generado por rpcgen para manejar tipos
+
+## Qué hace el programa
+
+### Servidor
+Al ser ejecutado, el servidor genera un arreglo de puestos de tamaño fijo
+definido a través de constantes, marcándolas como vacías, y luego espera que
+un cliente se conecte. Cuando esto ocurre, el servidor espera un mensaje de la
+forma `n:m;`, que representa una solicitud para el puesto en la fila n y en la
+columna m. Luego, si el puesto está libre, se marca como ocupado y se notifica
+al cliente que la reserva fue exitosa (0). Si está fuera del rango manejado por
+el servidor, se notifica (3). Si está ocupado y no quedan puestos libres, se
+notifica (2). Si está ocupado y quedan puestos libres, se notifica (1), y
+además se envía una lista con los puestos disponibles.
+
+### Cliente
+Al ser ejecutado, establece una conexión con el servidor indicado a través del
+protocolo RPC. Luego, envía el mensaje correspondiente al puesto solicitado al
+servidor y espera la respuesta. Cuando recibe la respuesta, la presenta en un
+formato amigable al usuario, explicando, si es necesario, qué debe hacer para
+concretar su reserva.
+
+## Ejecución
+
+Servidor: ./reserva_bol_server
+    No se suministran valores. El tamaño del vagón es especificado mediante
+    constantes directamente en el código.
+
+Cliente: ./reserva_bol_client -h <hostname> -r <fila> -c <columna>
+    Todos los argumentos son obligatorios. El hostname puede ser una dirección
+    ip o un nombre de dominio. No se suministra un número de puerto dado que
+    la implementación del protocolo RPC se encarga de manejar el puerto.
+
+## Condiciones particulares
+
+Reiteramos que en la versión RPC del programa el tamaño del vagón es
+especificado directamente en el código.
+
+Para dejar más claro el uso de los programas cliente, decidimos usar una
+bandera, -h, para especificar el hostname o IP del servidor con el cual se
+desea conectar.
+
+Por otro lado, volvemos a mencionar que se programó en inglés y que por lo
+tanto las banderas utilizadas para ejecutar los distintos programas están
+pensadas en ese idioma.
