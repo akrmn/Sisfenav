@@ -9,6 +9,9 @@ Moisés Ackerman  11-10005
 .
 ├── LEEME.txt             // Este archivo.
 │
+├── Protocolo.docx        // Archivo con la definición del protocolo
+│                         // (también entregado en físico).
+│
 ├── RPC                   // Carpeta con la versión del proyecto que utiliza
 │   │                     // Remote Procedure Call.
 │   │
